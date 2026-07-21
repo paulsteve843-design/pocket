@@ -1,0 +1,38 @@
+{
+  "SARAH": {
+    "role": "protagonist",
+    "age": "32",
+    "gender": "female",
+    "ethnicity": "East Asian",
+    "appearance": "Shoulder-length black hair with slight wave, sharp brown eyes that narrow when suspicious, athletic build, small scar above left eyebrow, fair skin with slight freckles on cheeks",
+    "clothing": "Navy wool blazer over grey cashmere turtleneck, silver pendant necklace, dark jeans, leather ankle boots",
+    "expression": "Guarded, watchful, rarely smiles genuinely. Resting face appears slightly tense. Eyes dart to exits in new spaces.",
+    "voice": "Alto register, measured pace, drops pitch when lying or hiding something. Slight rasp from former smoking habit.",
+    "emotion": "controlled_anxiety",
+    "distinguishing": "Scar above left eyebrow, silver pendant always visible, habit of touching necklace when nervous"
+  },
+  "MARCUS": {
+    "role": "antagonist",
+    "age": "45",
+    "gender": "male",
+    "ethnicity": "Caucasian",
+    "appearance": "Grey-streaked black hair swept back, heavy brow ridge, athletic but starting to soften around the middle, weathered hands with visible veins, steel-grey eyes",
+    "clothing": "Black leather jacket over dark henley, dark selvedge jeans, steel-toe boots, vintage watch on left wrist",
+    "expression": "Controlled, predatory calm. Smiles with only the mouth, never reaches the eyes. Maintains intense eye contact uncomfortably long.",
+    "voice": "Baritone, gravelly, pauses deliberately before important words. Lower volume than most speakers, forces others to lean in.",
+    "emotion": "controlled_rage",
+    "distinguishing": "Vintage watch, leather jacket with small tear on left shoulder, habit of cracking knuckles one at a time"
+  },
+  "NARRATOR": {
+    "role": "narrator",
+    "age": "N/A",
+    "gender": "N/A",
+    "ethnicity": "N/A",
+    "appearance": "N/A - No visual representation needed",
+    "clothing": "N/A",
+    "expression": "N/A",
+    "voice": "Deep, authoritative, measured. Provides context and internal thoughts.",
+    "emotion": "neutral",
+    "distinguishing": "No visual. Voice only. Blue placeholder frames will be used."
+  }
+}

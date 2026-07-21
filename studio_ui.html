@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Drama Cinema - Dynamic Studio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0a0a0f; --bg-card: #12121a; --bg-hover: #1a1a2e;
+            --accent: #6366f1; --accent-glow: #818cf8; --text: #e2e8f0;
+            --text-dim: #94a3b8; --border: #27273a; --success: #22c55e;
+            --warning: #f59e0b; --error: #ef4444; --lip-sync: #ec4899; --auto: #06b6d4;
+        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-dark); color: var(--text); min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%); padding: 1.5rem 2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .header h1 { font-size: 1.5rem; background: linear-gradient(90deg, var(--accent), var(--lip-sync)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+        .header .subtitle { font-size: 0.8rem; color: var(--text-dim); margin-top: 0.25rem; }
+        .gpu-status { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-dim); }
+        .gpu-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .grid { display: grid; grid-template-columns: 300px 1fr; gap: 2rem; }
+        .sidebar { display: flex; flex-direction: column; gap: 1rem; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+        .card h3 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 1rem; }
+        .nav-btn { width: 100%; padding: 0.75rem 1rem; margin-bottom: 0.5rem; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; transition: all 0.2s; text-align: left; font-size: 0.9rem; }
+        .nav-btn:hover, .nav-btn.active { background: var(--bg-hover); border-color: var(--accent); }
+        .nav-btn.active { box-shadow: 0 0 0 1px var(--accent); }
+        .main-content { display: flex; flex-direction: column; gap: 1.5rem; }
+        .upload-zone { border: 2px dashed var(--border); border-radius: 16px; padding: 3rem; text-align: center; transition: all 0.3s; cursor: pointer; background: var(--bg-card); }
+        .upload-zone:hover, .upload-zone.dragover { border-color: var(--lip-sync); background: var(--bg-hover); }
+        .upload-zone .icon { font-size: 3rem; margin-bottom: 1rem; }
+        .upload-zone h2 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+        .upload-zone p { color: var(--text-dim); font-size: 0.9rem; }
+        .upload-zone input[type="file"] { display: none; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-primary { background: linear-gradient(135deg, var(--accent), var(--lip-sync)); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4); }
+        .btn-secondary { background: var(--bg-hover); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); }
+        .btn-auto { background: linear-gradient(135deg, var(--auto), #0891b2); color: white; }
+        .btn-auto:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4); }
+        .drama-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .drama-item { padding: 1rem; background: var(--bg-hover); border-radius: 8px; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
+        .drama-item:hover { border-color: var(--accent); }
+        .drama-item.selected { border-color: var(--lip-sync); box-shadow: 0 0 0 1px var(--lip-sync); }
+        .drama-item .title { font-weight: 600; margin-bottom: 0.25rem; }
+        .drama-item .meta { font-size: 0.8rem; color: var(--text-dim); }
+        .character-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+        .character-card { background: var(--bg-hover); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; position: relative; }
+        .character-card .badge { position: absolute; top: 0.5rem; right: 0.5rem; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; }
+        .badge.auto { background: rgba(6, 182, 212, 0.2); color: var(--auto); }
+        .badge.user { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+        .character-card .avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--lip-sync)); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 0.75rem; }
+        .character-card .name { font-weight: 600; margin-bottom: 0.25rem; }
+        .character-card .role { font-size: 0.8rem; color: var(--lip-sync); margin-bottom: 0.5rem; }
+        .character-card .desc { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; }
+        .character-card .actions { margin-top: 0.75rem; display: flex; gap: 0.5rem; }
+        .character-card .actions button { padding: 0.4rem 0.75rem; font-size: 0.75rem; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text); cursor: pointer; }
+        .character-card .actions button:hover { border-color: var(--accent); }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.9rem; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--lip-sync); }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        .progress-bar { width: 100%; height: 8px; background: var(--bg-dark); border-radius: 4px; overflow: hidden; margin-top: 1rem; }
+        .progress-bar .fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--lip-sync)); border-radius: 4px; transition: width 0.3s; }
+        .log-output { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; font-family: 'Consolas', monospace; font-size: 0.8rem; max-height: 300px; overflow-y: auto; color: var(--text-dim); }
+        .log-output .line { margin-bottom: 0.25rem; }
+        .log-output .line.success { color: var(--success); }
+        .log-output .line.error { color: var(--error); }
+        .log-output .line.info { color: var(--accent-glow); }
+        .log-output .line.lip-sync { color: var(--lip-sync); }
+        .log-output .line.auto { color: var(--auto); }
+        .hidden { display: none !important; }
+        .tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .tab { padding: 0.75rem 1.25rem; background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.9rem; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--lip-sync); border-bottom-color: var(--lip-sync); }
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+        .result-card { background: var(--bg-hover); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .result-card .preview { aspect-ratio: 16/9; background: var(--bg-dark); display: flex; align-items: center; justify-content: center; color: var(--text-dim); }
+        .result-card .info { padding: 1rem; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; }
+        .modal h2 { margin-bottom: 1.5rem; }
+        .info-box { background: rgba(99, 102, 241, 0.1); border: 1px solid var(--accent); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.85rem; line-height: 1.6; }
+        .info-box strong { color: var(--lip-sync); }
+        .info-box.auto { background: rgba(6, 182, 212, 0.1); border-color: var(--auto); }
+        .info-box.auto strong { color: var(--auto); }
+        .pipeline-stages { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
+        .stage-item { background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.2s; }
+        .stage-item:hover { border-color: var(--lip-sync); }
+        .stage-item input[type="checkbox"] { accent-color: var(--lip-sync); }
+        .stage-item label { cursor: pointer; font-size: 0.85rem; }
+        .stage-item .stage-desc { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem; }
+        .asset-summary { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-top: 1rem; }
+        .asset-summary h4 { font-size: 0.85rem; color: var(--auto); margin-bottom: 0.75rem; }
+        .asset-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+        .asset-item:last-child { border-bottom: none; }
+        .asset-item .thumb { width: 40px; height: 40px; border-radius: 6px; background: var(--bg-hover); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .asset-item .details { flex: 1; }
+        .asset-item .details .name { font-size: 0.85rem; font-weight: 500; }
+        .asset-item .details .chars { font-size: 0.75rem; color: var(--text-dim); }
+        .asset-item .upload-btn { padding: 0.3rem 0.6rem; font-size: 0.7rem; border-radius: 4px; border: 1px solid var(--auto); background: transparent; color: var(--auto); cursor: pointer; }
+        .asset-item .upload-btn:hover { background: var(--auto); color: white; }
+        .location-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
+        .location-card { background: var(--bg-hover); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; }
+        .location-card .scene-type { font-size: 0.75rem; color: var(--auto); font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .location-card .name { font-weight: 600; margin-bottom: 0.25rem; }
+        .location-card .desc { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; }
+        .location-card .actions { margin-top: 0.75rem; display: flex; gap: 0.5rem; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .sidebar { order: 2; } }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>Audio Drama Cinema Studio</h1>
+            <div class="subtitle">Auto-Generate Characters & Locations from Audio - Lip Sync - Video</div>
+        </div>
+        <div class="gpu-status">
+            <span class="dot"></span>
+            <span id="gpuInfo">RTX 3060 Laptop - 6GB VRAM</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="grid">
+            <div class="sidebar">
+                <div class="card">
+                    <h3>Navigation</h3>
+                    <button class="nav-btn active" onclick="showSection('dramas')">Drama Series</button>
+                    <button class="nav-btn" onclick="showSection('upload')">Upload Audio</button>
+                    <button class="nav-btn" onclick="showSection('analyze')">Analyze Audio</button>
+                    <button class="nav-btn" onclick="showSection('characters')">Characters</button>
+                    <button class="nav-btn" onclick="showSection('locations')">Locations</button>
+                    <button class="nav-btn" onclick="showSection('process')">Generate Video</button>
+                    <button class="nav-btn" onclick="showSection('results')">Results</button>
+                </div>
+
+                <div class="card">
+                    <h3>Active Drama</h3>
+                    <div id="activeDramaInfo">
+                        <p style="color: var(--text-dim); font-size: 0.85rem;">No drama selected</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>System Status</h3>
+                    <div style="font-size: 0.85rem; color: var(--text-dim);">
+                        <div style="margin-bottom: 0.5rem;">PyTorch CUDA</div>
+                        <div style="margin-bottom: 0.5rem;">Ollama LLM</div>
+                        <div style="margin-bottom: 0.5rem;">FFmpeg</div>
+                        <div>Whisper + Wav2Lip</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <!-- DRAMAS SECTION -->
+                <section id="section-dramas" class="content-section">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h2 style="font-size: 1.25rem;">Drama Series</h2>
+                            <button class="btn btn-primary" onclick="openNewDramaModal()">+ New Drama</button>
+                        </div>
+                        <div class="drama-list" id="dramaList"></div>
+                    </div>
+                </section>
+
+                <!-- UPLOAD SECTION -->
+                <section id="section-upload" class="content-section hidden">
+                    <div class="card">
+                        <h2 style="margin-bottom: 1rem;">Upload Episode Audio</h2>
+                        <div class="info-box">
+                            <strong>MASTER TRACK:</strong> This audio drives everything.<br>
+                            Characters, locations, and lip sync are all derived from this audio file.
+                        </div>
+                        <div class="form-group">
+                            <label>Select Drama Series</label>
+                            <select id="uploadDramaSelect"><option value="">-- Choose a drama --</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Episode Number</label>
+                            <input type="number" id="episodeNumber" value="1" min="1">
+                        </div>
+                        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('audioFile').click()">
+                            <div class="icon">&#127925;</div>
+                            <h2>Drop audio file here</h2>
+                            <p>WAV, MP3, FLAC, M4A - This becomes the video's audio track</p>
+                            <input type="file" id="audioFile" accept="audio/*" onchange="handleFileSelect(event)">
+                        </div>
+                        <div id="uploadPreview" class="hidden" style="margin-top: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-hover); border-radius: 8px;">
+                                <span style="font-size: 2rem;">&#127925;</span>
+                                <div style="flex: 1;">
+                                    <div id="fileName" style="font-weight: 600;"></div>
+                                    <div id="fileSize" style="font-size: 0.85rem; color: var(--text-dim);"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 1.5rem;">
+                            <button class="btn btn-primary" onclick="uploadEpisode()">Upload & Analyze</button>
+                        </div>
+                        <div class="progress-bar hidden" id="uploadProgress"><div class="fill" style="width: 0%"></div></div>
+                    </div>
+                </section>
+
+                <!-- ANALYZE SECTION -->
+                <section id="section-analyze" class="content-section hidden">
+                    <div class="card">
+                        <h2 style="margin-bottom: 1rem;">Audio Analysis Results</h2>
+                        <div class="info-box auto">
+                            <strong>AUTO-DETECTED FROM AUDIO:</strong><br>
+                            The system analyzed your audio and found speakers, their personalities, and scene locations.<br>
+                            Review below. If anything looks wrong, you can edit or upload your own references.
+                        </div>
+                        <div class="form-group">
+                            <label>Select Drama & Episode</label>
+                            <select id="analyzeDramaSelect" onchange="loadAnalysis()"><option value="">-- Choose --</option></select>
+                        </div>
+                        <h3 style="margin: 1.5rem 0 1rem; font-size: 0.9rem; color: var(--text-dim);">Detected Speakers (Characters)</h3>
+                        <div class="character-grid" id="detectedCharacters">
+                            <p style="color: var(--text-dim); grid-column: 1/-1; text-align: center;">Upload and analyze audio to see detected characters</p>
+                        </div>
+                        <h3 style="margin: 1.5rem 0 1rem; font-size: 0.9rem; color: var(--text-dim);">Detected Locations</h3>
+                        <div class="location-grid" id="detectedLocations">
+                            <p style="color: var(--text-dim); grid-column: 1/-1; text-align: center;">Upload and analyze audio to see detected locations</p>
+                        </div>
+                        <div class="asset-summary" id="assetSummary">
+                            <h4>Asset Summary - Upload Your Own References</h4>
+                            <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1rem;">
+                                The system will auto-generate images. If you want specific looks, upload reference images below.
+                            </p>
+                            <div id="assetList">
+                                <p style="color: var(--text-dim); font-size: 0.85rem;">Analyze audio first to see asset list</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CHARACTERS SECTION -->
+                <section id="section-characters" class="content-section hidden">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h2 style="font-size: 1.25rem;">Character Registry</h2>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-auto" onclick="autoGenerateCharacters()">Auto-Generate</button>
+                                <button class="btn btn-primary" onclick="openAddCharacterModal()">+ Manual Add</button>
+                            </div>
+                        </div>
+                        <div class="info-box auto">
+                            <strong>AUTO or MANUAL:</strong><br>
+                            Characters can be <strong>auto-detected</strong> from audio (who speaks, their personality from dialogue).<br>
+                            Or <strong>manually defined</strong> if you already know the cast. You can also upload reference photos.
+                        </div>
+                        <div class="form-group">
+                            <label>Select Drama</label>
+                            <select id="charDramaSelect" onchange="loadCharacters()"><option value="">-- Choose a drama --</option></select>
+                        </div>
+                        <div class="character-grid" id="characterGrid"></div>
+                    </div>
+                </section>
+
+                <!-- LOCATIONS SECTION -->
+                <section id="section-locations" class="content-section hidden">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h2 style="font-size: 1.25rem;">Location Registry</h2>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-auto" onclick="autoGenerateLocations()">Auto-Generate</button>
+                                <button class="btn btn-primary" onclick="openAddLocationModal()">+ Manual Add</button>
+                            </div>
+                        </div>
+                        <div class="info-box auto">
+                            <strong>AUTO or MANUAL:</strong><br>
+                            Locations are <strong>auto-detected</strong> from story context (where scenes take place based on dialogue).<br>
+                            Or <strong>manually defined</strong> if you know the settings. Upload reference images for specific looks.
+                        </div>
+                        <div class="form-group">
+                            <label>Select Drama</label>
+                            <select id="locDramaSelect" onchange="loadLocations()"><option value="">-- Choose a drama --</option></select>
+                        </div>
+                        <div class="location-grid" id="locationGrid"></div>
+                    </div>
+                </section>
+
+                <!-- PROCESS SECTION -->
+                <section id="section-process" class="content-section hidden">
+                    <div class="card">
+                        <h2 style="margin-bottom: 1rem;">Generate Lip-Sync Video</h2>
+                        <div class="info-box">
+                            <strong>PIPELINE:</strong> Your audio drives everything.<br>
+                            Auto-detected characters speak with lip sync. Auto-detected locations set the scene.<br>
+                            You can override any auto-generated asset with your own reference images.
+                        </div>
+                        <div class="form-group">
+                            <label>Select Drama</label>
+                            <select id="processDramaSelect" onchange="loadEpisodesForProcess()"><option value="">-- Choose a drama --</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Select Episode</label>
+                            <select id="processEpisodeSelect"><option value="">-- Choose an episode --</option></select>
+                        </div>
+                        <h3 style="margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--text-dim);">Pipeline Stages</h3>
+                        <div class="pipeline-stages">
+                            <div class="stage-item">
+                                <input type="checkbox" id="stageTranscribe" checked>
+                                <div><label for="stageTranscribe">Transcribe</label><div class="stage-desc">Speech-to-text + speaker diarization</div></div>
+                            </div>
+                            <div class="stage-item">
+                                <input type="checkbox" id="stageSegment" checked>
+                                <div><label for="stageSegment">Segment</label><div class="stage-desc">Split into scenes by speaker/topic</div></div>
+                            </div>
+                            <div class="stage-item">
+                                <input type="checkbox" id="stageStory" checked>
+                                <div><label for="stageStory">Story</label><div class="stage-desc">Detect characters, locations, emotions</div></div>
+                            </div>
+                            <div class="stage-item">
+                                <input type="checkbox" id="stageGenChars" checked>
+                                <div><label for="stageGenChars">Gen Characters</label><div class="stage-desc">Auto-generate character images</div></div>
+                            </div>
+                            <div class="stage-item">
+                                <input type="checkbox" id="stageGenLocs" checked>
+                                <div><label for="stageGenLocs">Gen Locations</label><div class="stage-desc">Auto-generate location backgrounds</div></div>
+                            </div>
+                            <div class="stage-item">
+                                <input type="checkbox" id="stageLipSync" checked disabled>
+                                <div><label for="stageLipSync" style="color: var(--lip-sync);">Lip Sync (Required)</label><div class="stage-desc">Animate mouths to match audio</div></div>
+                            </div>
+                            <div class="stage-item">
+                                <input type="checkbox" id="stageAssemble" checked disabled>
+                                <div><label for="stageAssemble">Assemble</label><div class="stage-desc">Combine with original audio</div></div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="runPipeline()">Generate Video</button>
+                        <div class="progress-bar hidden" id="pipelineProgress"><div class="fill" style="width: 0%"></div></div>
+                        <div class="log-output" id="pipelineLog" style="margin-top: 1rem;"><div class="line">Ready to generate...</div></div>
+                    </div>
+                </section>
+
+                <!-- RESULTS SECTION -->
+                <section id="section-results" class="content-section hidden">
+                    <div class="card">
+                        <h2 style="margin-bottom: 1.5rem;">Production Results</h2>
+                        <div class="form-group">
+                            <label>Select Drama</label>
+                            <select id="resultDramaSelect" onchange="loadResults()"><option value="">-- Choose a drama --</option></select>
+                        </div>
+                        <div class="tabs">
+                            <button class="tab active" onclick="showResultTab('videos')">Final Videos</button>
+                            <button class="tab" onclick="showResultTab('transcripts')">Transcripts</button>
+                            <button class="tab" onclick="showResultTab('characters')">Characters</button>
+                            <button class="tab" onclick="showResultTab('locations')">Locations</button>
+                            <button class="tab" onclick="showResultTab('lip-sync')">Lip Sync</button>
+                        </div>
+                        <div id="resultsContainer"></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Drama Modal -->
+    <div class="modal-overlay" id="newDramaModal">
+        <div class="modal">
+            <h2>Create New Drama Series</h2>
+            <div class="form-group">
+                <label>Drama Title</label>
+                <input type="text" id="newDramaTitle" placeholder="e.g., Tamil Action Drama">
+            </div>
+            <div class="form-group">
+                <label>Language</label>
+                <select id="newDramaLanguage">
+                    <option value="auto">Auto-detect</option>
+                    <option value="en">English</option>
+                    <option value="ta">Tamil</option>
+                    <option value="hi">Hindi</option>
+                    <option value="te">Telugu</option>
+                    <option value="ml">Malayalam</option>
+                    <option value="kn">Kannada</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Theme</label>
+                <select id="newDramaTheme">
+                    <option value="auto">Auto-detect</option>
+                    <option value="romance">Romance</option>
+                    <option value="thriller">Thriller</option>
+                    <option value="horror">Horror</option>
+                    <option value="comedy">Comedy</option>
+                    <option value="drama">Drama</option>
+                    <option value="action">Action</option>
+                    <option value="mystery">Mystery</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeModal('newDramaModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="createDrama()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Character Modal -->
+    <div class="modal-overlay" id="addCharacterModal">
+        <div class="modal">
+            <h2>Add Character Manually</h2>
+            <div class="info-box" style="margin-bottom: 1rem;">
+                Use this if you already know the cast. Otherwise, use <strong>Auto-Generate from Audio</strong> on the Characters page.
+            </div>
+            <div class="form-group">
+                <label>Character Name</label>
+                <input type="text" id="charName" placeholder="e.g., SARAH">
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select id="charRole">
+                    <option value="protagonist">Protagonist</option>
+                    <option value="antagonist">Antagonist</option>
+                    <option value="supporting">Supporting</option>
+                    <option value="narrator">Narrator (no visual)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Age</label>
+                <input type="text" id="charAge" placeholder="e.g., 32">
+            </div>
+            <div class="form-group">
+                <label>Gender</label>
+                <select id="charGender">
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                    <option value="non-binary">Non-binary</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Physical Appearance (short, for image generation)</label>
+                <textarea id="charAppearance" placeholder="Dark hair, sharp eyes, athletic build, Indian complexion..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Clothing / Style (short)</label>
+                <textarea id="charClothing" placeholder="Navy blazer, grey turtleneck, gold earrings..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Expression / Demeanor (short)</label>
+                <textarea id="charExpression" placeholder="Guarded, watchful, rarely smiles, intense gaze..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Reference Photo (optional - for consistent look)</label>
+                <input type="file" id="charImage" accept="image/*">
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeModal('addCharacterModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="addCharacter()">Add Character</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Location Modal -->
+    <div class="modal-overlay" id="addLocationModal">
+        <div class="modal">
+            <h2>Add Location Manually</h2>
+            <div class="info-box" style="margin-bottom: 1rem;">
+                Use this if you know the settings. Otherwise, use <strong>Auto-Generate from Story</strong> on the Locations page.
+            </div>
+            <div class="form-group">
+                <label>Location Name</label>
+                <input type="text" id="locName" placeholder="e.g., Grand Ballroom">
+            </div>
+            <div class="form-group">
+                <label>Scene Type</label>
+                <select id="locType">
+                    <option value="interior">Interior</option>
+                    <option value="exterior">Exterior</option>
+                    <option value="both">Both</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Description (short, for image generation)</label>
+                <textarea id="locDesc" placeholder="Opulent Victorian ballroom, crystal chandeliers, marble floors, gold trim..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Mood / Lighting</label>
+                <select id="locMood">
+                    <option value="bright">Bright / Day</option>
+                    <option value="dim">Dim / Night</option>
+                    <option value="dramatic">Dramatic shadows</option>
+                    <option value="warm">Warm / Cozy</option>
+                    <option value="cold">Cold / Harsh</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Reference Photo (optional)</label>
+                <input type="file" id="locImage" accept="image/*">
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeModal('addLocationModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="addLocation()">Add Location</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Reference Modal -->
+    <div class="modal-overlay" id="uploadRefModal">
+        <div class="modal">
+            <h2>Upload Reference Image</h2>
+            <div class="info-box" style="margin-bottom: 1rem;">
+                Upload a reference photo to override the auto-generated image. The system will use this exact look.
+            </div>
+            <div class="form-group">
+                <label>Asset Type</label>
+                <input type="text" id="refAssetType" readonly style="background: var(--bg-hover);">
+            </div>
+            <div class="form-group">
+                <label>Asset Name</label>
+                <input type="text" id="refAssetName" readonly style="background: var(--bg-hover);">
+            </div>
+            <div class="form-group">
+                <label>Current Description</label>
+                <textarea id="refAssetDesc" readonly style="background: var(--bg-hover); min-height: 60px;"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Upload Reference Image</label>
+                <input type="file" id="refImage" accept="image/*">
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeModal('uploadRefModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitReference()">Upload Reference</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dramas = [];
+        let activeDrama = null;
+        let selectedFile = null;
+        let currentRefAsset = null;   // {type: 'character'|'location', name}
+        let analyzeJobId = null;
+        let analyzePollTimer = null;
+        let pipelineJobId = null;
+        let pipelinePollTimer = null;
+
+        // Analyze Audio and Results currently operate on episode 1 of the
+        // selected drama (the UI has no per-episode picker in those tabs).
+        // The "Generate Video" tab does let you pick an episode explicitly.
+        const DEFAULT_EPISODE = '1';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDramas();
+            setupDragDrop();
+        });
+
+        function showSection(section) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById('section-' + section).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        async function apiGet(path) {
+            const res = await fetch(path);
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                throw new Error(body.error || `Request failed (${res.status})`);
+            }
+            return res.json();
+        }
+
+        async function apiPost(path, data) {
+            const res = await fetch(path, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+            return body;
+        }
+
+        // ------------------------------------------------------------------
+        // Dramas
+        // ------------------------------------------------------------------
+        async function loadDramas() {
+            try {
+                dramas = await apiGet('/api/dramas');
+            } catch (e) {
+                console.error('Failed to load dramas:', e);
+                dramas = [];
+            }
+            renderDramaList();
+            updateDramaSelects();
+        }
+
+        function renderDramaList() {
+            const list = document.getElementById('dramaList');
+            if (dramas.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-dim); text-align: center;">No dramas yet. Create one!</p>';
+                return;
+            }
+            list.innerHTML = dramas.map(d => `
+                <div class="drama-item ${activeDrama && activeDrama.id === d.id ? 'selected' : ''}" onclick="selectDrama('${d.id}')">
+                    <div class="title">${d.title}</div>
+                    <div class="meta">${(d.language || 'auto').toUpperCase()} - ${d.theme} - ${d.episodes || 0} episodes</div>
+                </div>
+            `).join('');
+        }
+
+        function selectDrama(id) {
+            activeDrama = dramas.find(d => d.id === id);
+            document.getElementById('activeDramaInfo').innerHTML = `
+                <div style="font-weight: 600;">${activeDrama.title}</div>
+                <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.25rem;">${(activeDrama.language || 'auto').toUpperCase()} - ${activeDrama.theme}</div>
+            `;
+            renderDramaList();
+        }
+
+        function updateDramaSelects() {
+            const options = '<option value="">-- Choose a drama --</option>' + dramas.map(d => `<option value="${d.id}">${d.title}</option>`).join('');
+            document.getElementById('uploadDramaSelect').innerHTML = options;
+            document.getElementById('charDramaSelect').innerHTML = options;
+            document.getElementById('locDramaSelect').innerHTML = options;
+            document.getElementById('processDramaSelect').innerHTML = options;
+            document.getElementById('resultDramaSelect').innerHTML = options;
+            document.getElementById('analyzeDramaSelect').innerHTML = options;
+        }
+
+        function openNewDramaModal() { document.getElementById('newDramaModal').classList.add('active'); }
+        function openAddCharacterModal() {
+            if (!activeDrama) { alert('Please select a drama first'); return; }
+            document.getElementById('addCharacterForm')?.reset?.();
+            document.getElementById('addCharacterModal').classList.add('active');
+        }
+        function openAddLocationModal() {
+            if (!activeDrama) { alert('Please select a drama first'); return; }
+            document.getElementById('addLocationModal').classList.add('active');
+        }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        async function createDrama() {
+            const title = document.getElementById('newDramaTitle').value;
+            const language = document.getElementById('newDramaLanguage').value;
+            const theme = document.getElementById('newDramaTheme').value;
+            if (!title) { alert('Please enter a title'); return; }
+            try {
+                const newDrama = await apiPost('/api/dramas', {title, language, theme});
+                dramas.push(newDrama);
+            } catch (e) {
+                alert('Could not create drama: ' + e.message);
+                return;
+            }
+            renderDramaList();
+            updateDramaSelects();
+            closeModal('newDramaModal');
+        }
+
+        // ------------------------------------------------------------------
+        // Episode upload
+        // ------------------------------------------------------------------
+        function setupDragDrop() {
+            const zone = document.getElementById('uploadZone');
+            zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+            });
+        }
+
+        function handleFileSelect(e) { if (e.target.files.length) handleFile(e.target.files[0]); }
+
+        function handleFile(file) {
+            selectedFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+            document.getElementById('uploadPreview').classList.remove('hidden');
+        }
+
+        async function uploadEpisode() {
+            if (!selectedFile) { alert('Please select an audio file'); return; }
+            const dramaId = document.getElementById('uploadDramaSelect').value;
+            if (!dramaId) { alert('Please select a drama'); return; }
+            const progress = document.getElementById('uploadProgress');
+            progress.classList.remove('hidden');
+            progress.querySelector('.fill').style.width = '30%';
+
+            const formData = new FormData();
+            formData.append('audio', selectedFile);
+            formData.append('drama_id', dramaId);
+            formData.append('episode', document.getElementById('episodeNumber').value);
+
+            try {
+                const res = await fetch('/api/episodes', {method: 'POST', body: formData});
+                const result = await res.json();
+                if (!res.ok || result.error) throw new Error(result.error || 'Upload failed');
+                progress.querySelector('.fill').style.width = '100%';
+                await loadDramas();
+                setTimeout(() => {
+                    alert('Audio uploaded (' + (result.size / 1024 / 1024).toFixed(2) + ' MB). Now go to "Analyze Audio" to detect real speakers from it.');
+                    progress.classList.add('hidden');
+                    progress.querySelector('.fill').style.width = '0%';
+                }, 300);
+            } catch (e) {
+                progress.classList.add('hidden');
+                alert('Upload failed: ' + e.message);
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // Analyze Audio -- runs real transcription + segmentation (stages
+        // 1-2) and reports actual detected speakers, not canned data.
+        // ------------------------------------------------------------------
+        async function loadAnalysis() {
+            const dramaId = document.getElementById('analyzeDramaSelect').value;
+            const grid = document.getElementById('detectedCharacters');
+            if (!dramaId) {
+                grid.innerHTML = '<p style="color: var(--text-dim); grid-column: 1/-1;">Select a drama to analyze its uploaded audio.</p>';
+                return;
+            }
+
+            // First check if a transcript already exists from a previous run.
+            try {
+                const existing = await apiGet(`/api/analyze/speakers?drama_id=${dramaId}&episode=${DEFAULT_EPISODE}`);
+                if (existing.ready) {
+                    renderDetectedSpeakers(existing);
+                    return;
+                }
+            } catch (e) { /* fall through to kick off analysis */ }
+
+            grid.innerHTML = '<p style="color: var(--auto); grid-column: 1/-1;">Running real transcription + speaker diarization on the uploaded audio... this can take a few minutes on first run (model download + load).</p>';
+
+            try {
+                const job = await apiPost('/api/analyze', {drama_id: dramaId, episode: DEFAULT_EPISODE});
+                analyzeJobId = job.job_id;
+                pollAnalyzeJob(dramaId);
+            } catch (e) {
+                grid.innerHTML = `<p style="color: var(--error); grid-column: 1/-1;">${e.message}</p>`;
+            }
+        }
+
+        function pollAnalyzeJob(dramaId) {
+            clearInterval(analyzePollTimer);
+            analyzePollTimer = setInterval(async () => {
+                try {
+                    const status = await apiGet(`/api/pipeline/status?job_id=${analyzeJobId}`);
+                    const grid = document.getElementById('detectedCharacters');
+                    if (status.status === 'running' || status.status === 'starting') {
+                        const p = status.progress || {};
+                        grid.innerHTML = `<p style="color: var(--auto); grid-column: 1/-1;">${p.stage_name || 'Starting...'} (${p.percent || 0}%)</p>`;
+                    } else if (status.status === 'complete') {
+                        clearInterval(analyzePollTimer);
+                        const speakers = await apiGet(`/api/analyze/speakers?drama_id=${dramaId}&episode=${DEFAULT_EPISODE}`);
+                        renderDetectedSpeakers(speakers);
+                    } else if (status.status === 'failed') {
+                        clearInterval(analyzePollTimer);
+                        grid.innerHTML = `<p style="color: var(--error); grid-column: 1/-1;">Analysis failed (exit code ${status.returncode}). Check the terminal running studio_server.py for the full error log.</p>`;
+                    }
+                } catch (e) {
+                    clearInterval(analyzePollTimer);
+                }
+            }, 2000);
+        }
+
+        function renderDetectedSpeakers(data) {
+            const grid = document.getElementById('detectedCharacters');
+            const locBox = document.getElementById('detectedLocations');
+            if (!data.speakers || data.speakers.length === 0) {
+                grid.innerHTML = '<p style="color: var(--text-dim); grid-column: 1/-1;">No speakers detected in the transcript.</p>';
+            } else {
+                grid.innerHTML = data.speakers.map(s => `
+                    <div class="character-card">
+                        <span class="badge auto">AUTO</span>
+                        <div class="avatar">${s.name[0]}</div>
+                        <div class="name">${s.name}</div>
+                        <div class="role">${s.segments} lines - ${s.duration}s speaking time</div>
+                        <div class="desc">Detected via speech diarization. Add appearance/clothing details in the Characters tab to generate a reference image for this speaker.</div>
+                        <div class="actions">
+                            <button onclick="prefillCharacterFromSpeaker('${s.name}')">Add as Character</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            if (locBox) {
+                if (data.location_hints && data.location_hints.length) {
+                    locBox.innerHTML = data.location_hints.map(name => `
+                        <div class="location-card">
+                            <div class="name">${name}</div>
+                            <div class="desc">Location mentioned in dialogue/scene text. Add a full description in the Locations tab to generate a reference image.</div>
+                            <div class="actions"><button onclick="prefillLocationFromHint('${name}')">Add as Location</button></div>
+                        </div>
+                    `).join('');
+                } else {
+                    locBox.innerHTML = '<p style="color: var(--text-dim); grid-column: 1/-1;">No location names detected yet.</p>';
+                }
+            }
+            const summary = document.getElementById('assetList');
+            if (summary) {
+                summary.innerHTML = `<p style="color: var(--text-dim);">${data.speakers.length} speaker(s), ${data.scene_count || 0} scene(s) detected. Use the buttons above to promote them into full characters/locations.</p>`;
+            }
+        }
+
+        function prefillCharacterFromSpeaker(name) {
+            if (!activeDrama) { alert('Select a drama in the sidebar first'); return; }
+            document.getElementById('charName').value = name;
+            document.getElementById('addCharacterModal').classList.add('active');
+        }
+
+        function prefillLocationFromHint(name) {
+            if (!activeDrama) { alert('Select a drama in the sidebar first'); return; }
+            document.getElementById('locName').value = name;
+            document.getElementById('addLocationModal').classList.add('active');
+        }
+
+        // ------------------------------------------------------------------
+        // Characters (real persistence via /api/characters)
+        // ------------------------------------------------------------------
+        async function loadCharacters() {
+            const dramaId = document.getElementById('charDramaSelect').value;
+            const grid = document.getElementById('characterGrid');
+            if (!dramaId) {
+                grid.innerHTML = '<p style="color: var(--text-dim); grid-column: 1/-1; text-align: center;">Select a drama to view characters</p>';
+                return;
+            }
+            let characters = {};
+            try {
+                characters = await apiGet(`/api/characters?drama_id=${dramaId}`);
+            } catch (e) {
+                grid.innerHTML = `<p style="color: var(--error);">${e.message}</p>`;
+                return;
+            }
+            const names = Object.keys(characters);
+            if (names.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem;"><p style="color: var(--text-dim); margin-bottom: 1rem;">No characters yet.</p><button class="btn btn-auto" onclick="showSection(\'analyze\')">Go Analyze Audio</button></div>';
+                return;
+            }
+            grid.innerHTML = names.map(name => {
+                const c = characters[name];
+                return `
+                <div class="character-card">
+                    <span class="badge ${c.reference_image ? 'user' : 'auto'}">${c.reference_image ? 'HAS REF' : 'NEEDS REF'}</span>
+                    <div class="avatar">${name[0]}</div>
+                    <div class="name">${name}</div>
+                    <div class="role">${c.role || 'supporting'}</div>
+                    <div class="desc">${c.appearance || '(no appearance description yet)'}</div>
+                    <div class="actions">
+                        <button onclick="openUploadRef('character', '${name}')">${c.reference_image ? 'Change' : 'Upload'} Ref</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function addCharacter() {
+            if (!activeDrama) { alert('Select a drama in the sidebar first'); return; }
+            const data = {
+                drama_id: activeDrama.id,
+                name: document.getElementById('charName').value.toUpperCase(),
+                role: document.getElementById('charRole').value,
+                age: document.getElementById('charAge').value,
+                gender: document.getElementById('charGender').value,
+                appearance: document.getElementById('charAppearance').value,
+                clothing: document.getElementById('charClothing').value,
+                expression: document.getElementById('charExpression').value,
+            };
+            if (!data.name) { alert('Please enter a character name'); return; }
+            try {
+                await apiPost('/api/characters', data);
+            } catch (e) {
+                alert('Could not save character: ' + e.message);
+                return;
+            }
+            closeModal('addCharacterModal');
+            document.getElementById('charDramaSelect').value = activeDrama.id;
+            loadCharacters();
+        }
+
+        // ------------------------------------------------------------------
+        // Locations (real persistence via /api/locations)
+        // ------------------------------------------------------------------
+        async function loadLocations() {
+            const dramaId = document.getElementById('locDramaSelect').value;
+            const grid = document.getElementById('locationGrid');
+            if (!dramaId) {
+                grid.innerHTML = '<p style="color: var(--text-dim); grid-column: 1/-1; text-align: center;">Select a drama to view locations</p>';
+                return;
+            }
+            let locations = {};
+            try {
+                locations = await apiGet(`/api/locations?drama_id=${dramaId}`);
+            } catch (e) {
+                grid.innerHTML = `<p style="color: var(--error);">${e.message}</p>`;
+                return;
+            }
+            const names = Object.keys(locations);
+            if (names.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem;"><p style="color: var(--text-dim);">No locations yet.</p></div>';
+                return;
+            }
+            grid.innerHTML = names.map(name => {
+                const l = locations[name];
+                return `
+                <div class="location-card">
+                    <span class="badge ${l.reference_image ? 'user' : 'auto'}" style="float: right;">${l.reference_image ? 'HAS REF' : 'NEEDS REF'}</span>
+                    <div class="scene-type">${l.time_of_day || 'day'} - ${l.lighting || 'neutral'}</div>
+                    <div class="name">${name}</div>
+                    <div class="desc">${l.description || '(no description yet)'}</div>
+                    <div class="actions">
+                        <button onclick="openUploadRef('location', '${name}')">${l.reference_image ? 'Change' : 'Upload'} Ref</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function addLocation() {
+            if (!activeDrama) { alert('Select a drama in the sidebar first'); return; }
+            const mood = document.getElementById('locMood').value;
+            const timeOfDayMap = {bright: 'day', dim: 'night', dramatic: 'dusk', warm: 'evening', cold: 'day'};
+            const data = {
+                drama_id: activeDrama.id,
+                name: document.getElementById('locName').value,
+                description: document.getElementById('locDesc').value,
+                scene_type: document.getElementById('locType').value,
+                lighting: mood,
+                time_of_day: timeOfDayMap[mood] || 'day',
+                atmosphere: mood,
+            };
+            if (!data.name) { alert('Please enter a location name'); return; }
+            try {
+                await apiPost('/api/locations', data);
+            } catch (e) {
+                alert('Could not save location: ' + e.message);
+                return;
+            }
+            closeModal('addLocationModal');
+            document.getElementById('locDramaSelect').value = activeDrama.id;
+            loadLocations();
+        }
+
+        // ------------------------------------------------------------------
+        // Reference image upload (real file upload -> used instead of FLUX
+        // generation for that character/location)
+        // ------------------------------------------------------------------
+        function openUploadRef(type, name) {
+            currentRefAsset = {type, name};
+            document.getElementById('refAssetType').value = type === 'character' ? 'Character' : 'Location';
+            document.getElementById('refAssetName').value = name;
+            document.getElementById('uploadRefModal').classList.add('active');
+        }
+
+        async function submitReference() {
+            const file = document.getElementById('refImage').files[0];
+            if (!file) { alert('Please select an image'); return; }
+            if (!activeDrama) { alert('No active drama selected'); return; }
+
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('drama_id', activeDrama.id);
+            formData.append('type', currentRefAsset.type);
+            formData.append('name', currentRefAsset.name);
+
+            try {
+                const res = await fetch('/api/references', {method: 'POST', body: formData});
+                const result = await res.json();
+                if (!res.ok || result.error) throw new Error(result.error || 'Upload failed');
+            } catch (e) {
+                alert('Reference upload failed: ' + e.message);
+                return;
+            }
+
+            closeModal('uploadRefModal');
+            if (currentRefAsset.type === 'character') loadCharacters(); else loadLocations();
+            alert('Reference image saved. It will be used instead of an auto-generated image the next time this drama runs Stage 4.');
+        }
+
+        // ------------------------------------------------------------------
+        // Pipeline execution (real background job + polling, not a
+        // simulated setTimeout sequence)
+        // ------------------------------------------------------------------
+        function loadEpisodesForProcess() {
+            const select = document.getElementById('processEpisodeSelect');
+            const dramaId = document.getElementById('processDramaSelect').value;
+            select.innerHTML = '<option value="">-- Choose an episode --</option>';
+            const drama = dramas.find(d => d.id === dramaId);
+            const count = Math.max(drama ? drama.episodes : 0, 1);
+            for (let i = 1; i <= count; i++) {
+                select.innerHTML += `<option value="${i}">Episode ${i}</option>`;
+            }
+        }
+
+        async function runPipeline() {
+            const dramaId = document.getElementById('processDramaSelect').value;
+            const episode = document.getElementById('processEpisodeSelect').value;
+            const log = document.getElementById('pipelineLog');
+            const progress = document.getElementById('pipelineProgress');
+
+            if (!dramaId || !episode) { alert('Select a drama and episode first'); return; }
+
+            progress.classList.remove('hidden');
+            progress.querySelector('.fill').style.width = '0%';
+            log.innerHTML = '<div class="line info">Starting real pipeline (this runs Whisper, the LLM, FLUX, LTX-Video and wav2lip on your local machine -- it can take a long time depending on your GPU)...</div>';
+
+            try {
+                const job = await apiPost('/api/pipeline', {drama_id: dramaId, episode});
+                pipelineJobId = job.job_id;
+                pollPipelineJob();
+            } catch (e) {
+                log.innerHTML += `<div class="line" style="color: var(--error);">Failed to start: ${e.message}</div>`;
+            }
+        }
+
+        function pollPipelineJob() {
+            clearInterval(pipelinePollTimer);
+            const log = document.getElementById('pipelineLog');
+            const progress = document.getElementById('pipelineProgress');
+            pipelinePollTimer = setInterval(async () => {
+                try {
+                    const status = await apiGet(`/api/pipeline/status?job_id=${pipelineJobId}`);
+                    const p = status.progress || {};
+                    progress.querySelector('.fill').style.width = (p.percent || 0) + '%';
+                    if (p.log_tail) {
+                        log.innerHTML = p.log_tail.map(line => `<div class="line info">${escapeHtml(line)}</div>`).join('');
+                        log.scrollTop = log.scrollHeight;
+                    }
+                    if (status.status === 'complete') {
+                        clearInterval(pipelinePollTimer);
+                        progress.querySelector('.fill').style.width = '100%';
+                        log.innerHTML += '<div class="line success" style="margin-top: 1rem; font-weight: 600;">Pipeline complete! Check the Results tab for your final video.</div>';
+                    } else if (status.status === 'failed') {
+                        clearInterval(pipelinePollTimer);
+                        log.innerHTML += `<div class="line" style="color: var(--error); margin-top: 1rem;">Pipeline failed (exit code ${status.returncode}). See the terminal running studio_server.py, or the log tail above, for details.</div>`;
+                    }
+                } catch (e) {
+                    clearInterval(pipelinePollTimer);
+                }
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ------------------------------------------------------------------
+        // Results (reads what's actually on disk for the selected drama)
+        // ------------------------------------------------------------------
+        let currentResultTab = 'videos';
+
+        function showResultTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            currentResultTab = tab;
+            loadResults();
+        }
+
+        async function loadResults() {
+            const dramaId = document.getElementById('resultDramaSelect').value;
+            const container = document.getElementById('resultsContainer');
+            if (!dramaId) {
+                container.innerHTML = '<p style="color: var(--text-dim);">Select a drama to view its results.</p>';
+                return;
+            }
+
+            let data;
+            try {
+                data = await apiGet(`/api/results?drama_id=${dramaId}&episode=${DEFAULT_EPISODE}`);
+            } catch (e) {
+                container.innerHTML = `<p style="color: var(--error);">${e.message}</p>`;
+                return;
+            }
+
+            if (currentResultTab === 'videos') {
+                if (data.final_video) {
+                    container.innerHTML = `
+                        <div class="results-grid">
+                            <div class="result-card">
+                                <video controls style="width: 100%; border-radius: 8px;" src="/api/video?drama_id=${dramaId}&episode=${DEFAULT_EPISODE}"></video>
+                                <div class="info">
+                                    <div style="font-weight: 600;">Episode ${DEFAULT_EPISODE} - Final</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-dim);">${data.final_video}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                } else {
+                    container.innerHTML = '<p style="color: var(--text-dim);">No final video yet. Run the pipeline in the Generate Video tab first.</p>';
+                }
+            } else if (currentResultTab === 'transcripts') {
+                if (data.transcripts.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-dim);">No transcript yet.</p>';
+                } else {
+                    container.innerHTML = data.transcripts.map(t => `<div class="card" style="font-family: monospace; font-size: 0.85rem;">${t}</div>`).join('');
+                }
+            } else if (currentResultTab === 'characters') {
+                const names = Object.keys(data.characters || {});
+                container.innerHTML = names.length === 0
+                    ? '<p style="color: var(--text-dim);">No characters yet.</p>'
+                    : `<div class="results-grid">${names.map(name => {
+                        const ref = (data.refs || []).find(r => r.includes(`character_${name.toLowerCase()}`));
+                        return `<div class="result-card">
+                            ${ref ? `<img src="/api/image?path=${encodeURIComponent(ref)}" style="width:100%; border-radius: 8px;">` : `<div class="preview" style="background: linear-gradient(135deg, #1a1a2e, #0f0f1a);">${name}</div>`}
+                            <div class="info"><div style="font-weight: 600;">${name}</div><div style="font-size: 0.85rem; color: var(--text-dim);">${data.characters[name].role || ''}</div></div>
+                        </div>`;
+                    }).join('')}</div>`;
+            } else if (currentResultTab === 'locations') {
+                const names = Object.keys(data.locations || {});
+                container.innerHTML = names.length === 0
+                    ? '<p style="color: var(--text-dim);">No locations yet.</p>'
+                    : `<div class="results-grid">${names.map(name => {
+                        const ref = (data.refs || []).find(r => r.includes(`location_${name.toLowerCase()}`));
+                        return `<div class="result-card">
+                            ${ref ? `<img src="/api/image?path=${encodeURIComponent(ref)}" style="width:100%; border-radius: 8px;">` : `<div class="preview" style="background: linear-gradient(135deg, #1a1a2e, #0f0f1a);">${name}</div>`}
+                            <div class="info"><div style="font-weight: 600;">${name}</div></div>
+                        </div>`;
+                    }).join('')}</div>`;
+            } else {
+                container.innerHTML = data.lipsync.length === 0
+                    ? '<p style="color: var(--text-dim);">No lip-sync clips yet.</p>'
+                    : `<div class="card">${data.lipsync.map(f => `<div>${f}</div>`).join('')}</div>`;
+            }
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>

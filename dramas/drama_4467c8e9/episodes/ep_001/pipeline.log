@@ -1,0 +1,139 @@
+C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\pyannote\audio\core\io.py:48: UserWarning: 
+torchcodec is not installed correctly so built-in audio decoding will fail. Solutions are:
+* use audio preloaded in-memory as a {'waveform': (channel, time) torch.Tensor, 'sample_rate': int} dictionary;
+* fix torchcodec installation. Error message was:
+
+Could not load libtorchcodec. Likely causes:
+          1. FFmpeg is not properly installed in your environment. We support
+             versions 4, 5, 6 and 7.
+          2. The PyTorch version (2.8.0+cpu) is not compatible with
+             this version of TorchCodec. Refer to the version compatibility
+             table:
+             https://github.com/pytorch/torchcodec?tab=readme-ov-file#installing-torchcodec.
+          3. Another runtime dependency; see exceptions below.
+        The following exceptions were raised as we tried to load libtorchcodec:
+        
+[start of libtorchcodec loading traceback]
+FFmpeg version 7: Could not find module 'C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\torchcodec\libtorchcodec_core7.dll' (or one of its dependencies). Try using the full path with constructor syntax.
+FFmpeg version 6: Could not find module 'C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\torchcodec\libtorchcodec_core6.dll' (or one of its dependencies). Try using the full path with constructor syntax.
+FFmpeg version 5: Could not find module 'C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\torchcodec\libtorchcodec_core5.dll' (or one of its dependencies). Try using the full path with constructor syntax.
+FFmpeg version 4: Could not find module 'C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\torchcodec\libtorchcodec_core4.dll' (or one of its dependencies). Try using the full path with constructor syntax.
+[end of libtorchcodec loading traceback].
+  warnings.warn(
+Multiple distributions found for package optimum. Picked distribution: optimum
+Running scoped to episode dir: C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\dramas\drama_4467c8e9\episodes\ep_001
+
+============================================================
+PROCESSING: audio.mp3
+============================================================
+[AudioProcessor] Loading Whisper model...
+[AudioProcessor] Loading alignment model...
+[AudioProcessor] Loading diarization model...
+2026-07-21 09:33:11 - whisperx.diarize - INFO - Loading diarization model: pyannote/speaker-diarization-3.1
+C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\speechbrain\utils\torch_audio_backend.py:64: UserWarning: torchaudio._backend.list_audio_backends has been deprecated. This deprecation is part of a large refactoring effort to transition TorchAudio into a maintenance phase. The decoding and encoding capabilities of PyTorch for both audio and video are being consolidated into TorchCodec. Please see https://github.com/pytorch/audio/issues/3902 for more information. It will be removed from the 2.9 release. 
+  available_backends = torchaudio.list_audio_backends()
+
+Could not download xvec_transform.npz from pyannote/speaker-diarization-community-1.
+It might be because the repository is private or gated:
+
+* visit https://hf.co/pyannote/speaker-diarization-community-1 to accept user conditions
+* visit https://hf.co/settings/tokens to create an authentication token
+* load the xvec_transform.npz with the `token` argument:
+    >>> xvec_transform.npz.from_pretrained('pyannote/speaker-diarization-community-1', token='hf_....')
+
+Traceback (most recent call last):
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\huggingface_hub\utils\_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\requests\models.py", line 1167, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 403 Client Error: Forbidden for url: https://huggingface.co/pyannote/speaker-diarization-community-1/resolve/main/plda/xvec_transform.npz
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\src\stages\stage_01_transcribe.py", line 69, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\src\stages\stage_01_transcribe.py", line 41, in main
+    transcript = processor.transcribe(audio_file)
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\src\core\audio_processor.py", line 84, in transcribe
+    self.load_models()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\src\core\audio_processor.py", line 60, in load_models
+    self.diarize_model = DiarizationPipeline(
+                         ~~~~~~~~~~~~~~~~~~~^
+        model_name=self.config.models.diarization_model,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        token=hf_token,
+        ^^^^^^^^^^^^^^^
+        device=self.device
+        ^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\whisperx\diarize.py", line 103, in __init__
+    self.model = Pipeline.from_pretrained(model_config, token=token, cache_dir=cache_dir).to(device)
+                 ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\pyannote\audio\core\pipeline.py", line 278, in from_pretrained
+    pipeline = Klass(**params)
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\pyannote\audio\pipelines\speaker_diarization.py", line 231, in __init__
+    self._plda = get_plda(plda, token=token, cache_dir=cache_dir)
+                 ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\pyannote\audio\pipelines\utils\getter.py", line 239, in get_plda
+    loaded_plda = PLDA.from_pretrained(**plda)
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\pyannote\audio\core\plda.py", line 114, in from_pretrained
+    path_to_transform = download_from_hf_hub(
+        checkpoint,
+    ...<4 lines>...
+        token=token,
+    )
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\pyannote\audio\utils\hf_hub.py", line 80, in download_from_hf_hub
+    return hf_hub_download(
+        model_id,
+    ...<7 lines>...
+        token=token,
+    )
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\huggingface_hub\utils\_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\huggingface_hub\file_download.py", line 1014, in hf_hub_download
+    return _hf_hub_download_to_cache_dir(
+        # Destination
+    ...<14 lines>...
+        force_download=force_download,
+    )
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\huggingface_hub\file_download.py", line 1121, in _hf_hub_download_to_cache_dir
+    _raise_on_head_call_error(head_call_error, force_download, local_files_only)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\huggingface_hub\file_download.py", line 1662, in _raise_on_head_call_error
+    raise head_call_error
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\huggingface_hub\file_download.py", line 1550, in _get_metadata_or_catch_error
+    metadata = get_hf_file_metadata(
+        url=url, proxies=proxies, timeout=etag_timeout, headers=headers, token=token, endpoint=endpoint
+    )
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\huggingface_hub\utils\_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\huggingface_hub\file_download.py", line 1467, in get_hf_file_metadata
+    r = _request_wrapper(
+        method="HEAD",
+    ...<5 lines>...
+        timeout=timeout,
+    )
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\huggingface_hub\file_download.py", line 283, in _request_wrapper
+    response = _request_wrapper(
+        method=method,
+    ...<2 lines>...
+        **params,
+    )
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\huggingface_hub\file_download.py", line 307, in _request_wrapper
+    hf_raise_for_status(response)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\Steve\Downloads\audio_drama_cinema_v1.0\audio_drama_cinema\venv\Lib\site-packages\huggingface_hub\utils\_http.py", line 420, in hf_raise_for_status
+    raise _format(GatedRepoError, message, response) from e
+huggingface_hub.errors.GatedRepoError: 403 Client Error. (Request ID: Root=1-6a5eef7e-50a472e46acc61d42ddf4aff;46331dd8-de8a-4895-8dcf-e794e08e26ab)
+
+Cannot access gated repo for url https://huggingface.co/pyannote/speaker-diarization-community-1/resolve/main/plda/xvec_transform.npz.
+Access to model pyannote/speaker-diarization-community-1 is restricted and you are not in the authorized list. Visit https://huggingface.co/pyannote/speaker-diarization-community-1 to ask for access.
+
+======================================================================
+STAGE 1: Speech Recognition & Diarization
+======================================================================

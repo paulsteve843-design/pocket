@@ -1,0 +1,20 @@
+{
+  "interior_apartment": {
+    "type": "interior_residential",
+    "description": "1940s brick apartment building, third floor. Dimly lit living room with worn hardwood floors that creak. Sparse furniture: single armchair, small table with lamp, bookshelf against one wall. Single window with venetian blinds, street light filtering through creating striped shadows on the floor. Walls are cream-colored but yellowed with age. Small kitchen visible through open doorway.",
+    "lighting": "Single warm tungsten lamp (60W equivalent) on side table. Deep shadows in corners. Venetian blind patterns on floor and walls. No overhead lighting.",
+    "time_of_day": "night",
+    "atmosphere": "Tense, intimate, slightly claustrophobic. Warm but oppressive. Rain visible through window.",
+    "acoustic_quality": "Tight reverb, thin walls allow distant traffic and occasional neighbor sounds",
+    "key_features": ["venetian blinds", "worn hardwood", "single lamp", "rain on window"]
+  },
+  "exterior_street": {
+    "type": "exterior_urban",
+    "description": "Rain-slicked city street at night. Brick buildings on both sides, fire escapes visible. Neon signs reflecting in puddles. Steam rising from subway grates. Parked cars line the curb. Occasional street lamp with buzzing halogen light.",
+    "lighting": "Cool sodium vapor street lamps, neon reflections in wet surfaces, high contrast between lit and shadow areas",
+    "time_of_day": "night",
+    "atmosphere": "Noir, isolating, slightly dangerous. Wet surfaces reflect colors. Steam adds atmosphere.",
+    "acoustic_quality": "Distant traffic, rain on pavement, occasional siren, footsteps echo",
+    "key_features": ["neon reflections", "steam from grates", "wet pavement", "brick walls"]
+  }
+}

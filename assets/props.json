@@ -1,0 +1,14 @@
+{
+  "coffee_cup": {
+    "description": "White ceramic mug, slightly chipped on rim, steam rising",
+    "first_appearance": "scene_001",
+    "state_tracking": true,
+    "states": ["full_hot", "half_empty", "empty", "dropped_broken"]
+  },
+  "silver_pendant": {
+    "description": "Small silver locket on thin chain, circular, engraved with initials",
+    "first_appearance": "scene_001",
+    "state_tracking": false,
+    "worn_by": "SARAH"
+  }
+}

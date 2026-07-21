@@ -1,0 +1,67 @@
+hardware:
+  device: cuda
+  gpu_id: 0
+  max_vram_gb: 5          # 6GB total, leave 1GB for OS/display
+  max_ram_gb: 14          # 16GB total, leave 2GB for OS
+  mixed_precision: fp16
+  enable_cpu_offload: true    # Essential with 6GB
+  enable_attention_slicing: true
+  enable_vae_slicing: true
+  enable_vae_tiling: true
+
+models:
+  whisper:
+    model_id: openai/whisper-medium
+    language: en
+    compute_type: float16
+    batch_size: 2           # Reduced from 4 for 6GB
+
+  llm:
+    provider: ollama
+    model_id: qwen2.5:7b
+    context_length: 4096    # Reduced from 8192 for RAM
+    temperature: 0.7
+    top_p: 0.9
+    quantization: q4_0
+
+  image_gen:
+    model_id: black-forest-labs/FLUX.1-schnell
+    resolution: [384, 512]  # Reduced from 512x768
+    inference_steps: 4
+    guidance_scale: 0.0
+
+  video_gen:
+    model_id: Lightricks/LTX-Video
+    resolution: [384, 256]  # Reduced from 512x320
+    num_frames: 17            # Reduced from 25 (~0.7s clips)
+    fps: 25
+    inference_steps: 20       # Reduced from 30
+    guidance_scale: 2.0         # Reduced from 3.0
+
+  lipsync:
+    model_id: wav2lip_gan
+    face_resolution: 96
+    audio_sr: 16000
+
+pipeline:
+  scene:
+    min_duration: 3.0
+    max_duration: 45.0        # Reduced from 60 for shorter scenes
+    silence_threshold: 0.5
+
+  shot:
+    max_shots_per_scene: 5    # Reduced from 8
+    default_duration: 3.0     # Reduced from 4.0
+    overlap_frames: 3
+
+  fallback:
+    max_retries: 10
+    fallback_frame_color: [0, 0, 255]
+    fallback_frame_duration: 3.0
+    fallback_prompt: "solid blue screen, cinematic blue color, no content, placeholder frame"
+    narrator_skip_visual: true
+
+  quality:
+    min_face_size: 60
+    min_motion_score: 0.15
+    max_blur_score: 100
